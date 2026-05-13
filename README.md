@@ -1,36 +1,44 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Parcial Final BI — Sensor Dashboard
 
-## Getting Started
+Interfaz Next.js para visualizar y filtrar los datos del Excel `ParcialFinal_BI.xlsx`, mapeados a la estructura de `tbl_sensors_data_temp`.
 
-First, run the development server:
+## ¿Qué hace?
+
+- **Parsea** el Excel (Fecha + Hora → `data_date`, nombre de columna → `block_name`, fila de tipos → `data_type`)
+- **Carga** 227.771 registros directamente en el browser desde `sensor_data.csv`
+- **Filtra** por `fecha_inicio`, `fecha_fin`, `block_name` y `data_type` en tiempo real
+- **Paginación** de 50 registros por página con estadísticas (promedio, mín, máx)
+
+## Cómo correr localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Desplegar en Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install -g vercel
+vercel
+```
 
-## Learn More
+O conectar el repo en https://vercel.com/new
 
-To learn more about Next.js, take a look at the following resources:
+## Estructura del Excel → tabla
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Excel | Campo SQL |
+|-------|-----------|
+| Fila 1 col 0 (ej: `AG10`) | `block_name` |
+| Fila 2 col 0 (ej: `RHUM`) | `data_type` |
+| `Fecha` + `Hora` | `data_date` |
+| Valor numérico | `data_value` |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## data_types
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `RHUM` — Humedad relativa (%)
+- `TEMP` — Temperatura (°C)
+- `PURO` — Punto de Rocío (°C)
+- `RASO` — Radiación PAR (µmol m⁻² s⁻¹)

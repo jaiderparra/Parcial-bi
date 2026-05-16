@@ -146,7 +146,7 @@ export default function Home() {
           <div className="text-center space-y-2">
             <div className="text-4xl">📂</div>
             <h2 className="text-lg font-semibold text-white">Cargar archivo CSV</h2>
-            <p className="text-slate-400 text-sm">Selecciona el archivo <span className="text-cyan-400">sensor_data.csv</span> generado por el script Python</p>
+            <p className="text-slate-400 text-sm">Selecciona el archivo <span className="text-cyan-400">sensor_data.csv</span> generado por el script javascript</p>
           </div>
           <label className="cursor-pointer w-full">
             <div className="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-10 text-center transition-colors group">

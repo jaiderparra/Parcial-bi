@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Papa from "papaparse";
 
 interface SensorRecord {
@@ -46,30 +46,35 @@ const PAGE_SIZE = 50;
 
 export default function Home() {
   const [allData, setAllData] = useState<SensorRecord[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [fileName, setFileName] = useState("");
   const [fechaInicio, setFechaInicio] = useState("2023-01-01");
   const [fechaFin, setFechaFin] = useState("2023-12-31");
   const [selectedBlocks, setSelectedBlocks] = useState<string[]>([]);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [page, setPage] = useState(1);
 
-  useEffect(() => {
+  const handleFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
     setLoading(true);
-    const buffer: SensorRecord[] = [];
+    setLoaded(false);
+    setAllData([]);
 
-    Papa.parse<SensorRecord>("/sensor_data.csv", {
-      download: true,
+    const buffer: SensorRecord[] = [];
+    Papa.parse<SensorRecord>(file, {
       header: true,
       skipEmptyLines: true,
       chunkSize: 1024 * 64,
       chunk: (results: Papa.ParseResult<SensorRecord>) => {
-        for (const row of results.data) {
-          buffer.push(row);
-        }
+        for (const row of results.data) buffer.push(row);
       },
       complete: () => {
         setAllData(buffer);
         setLoading(false);
+        setLoaded(true);
       },
       error: () => setLoading(false),
     });
@@ -114,6 +119,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#0a0e1a] text-slate-100 font-mono">
+      {/* Header */}
       <div className="border-b border-slate-800 bg-[#0d1220]">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
           <div>
@@ -123,24 +129,62 @@ export default function Home() {
             </h1>
             <p className="text-slate-500 text-xs mt-1">tbl_sensors_data_temp — BI Parcial Final</p>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-slate-500">registros cargados</div>
-            <div className="text-2xl font-bold text-cyan-400 tabular-nums">
-              {loading ? "…" : allData.length.toLocaleString("es-CO")}
+          {loaded && (
+            <div className="text-right">
+              <div className="text-xs text-slate-500">registros cargados</div>
+              <div className="text-2xl font-bold text-cyan-400 tabular-nums">
+                {allData.length.toLocaleString("es-CO")}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {loading ? (
+      {/* Upload screen */}
+      {!loaded && !loading && (
+        <div className="max-w-xl mx-auto px-6 py-20 flex flex-col items-center gap-6">
+          <div className="text-center space-y-2">
+            <div className="text-4xl">📂</div>
+            <h2 className="text-lg font-semibold text-white">Cargar archivo CSV</h2>
+            <p className="text-slate-400 text-sm">Selecciona el archivo <span className="text-cyan-400">sensor_data.csv</span> generado por el script Python</p>
+          </div>
+          <label className="cursor-pointer w-full">
+            <div className="border-2 border-dashed border-slate-700 hover:border-cyan-500 rounded-xl p-10 text-center transition-colors group">
+              <p className="text-slate-500 group-hover:text-slate-300 text-sm transition-colors">
+                Haz clic para seleccionar el archivo
+              </p>
+              <p className="text-slate-600 text-xs mt-1">sensor_data.csv · ~8MB</p>
+            </div>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFile}
+              className="hidden"
+            />
+          </label>
+        </div>
+      )}
+
+      {/* Loading */}
+      {loading && (
         <div className="max-w-7xl mx-auto px-6 py-20 flex flex-col items-center gap-4">
           <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
-          <p className="text-slate-400 text-sm">Cargando datos del Excel...</p>
+          <p className="text-slate-400 text-sm">Procesando <span className="text-white">{fileName}</span>...</p>
         </div>
-      ) : (
+      )}
+
+      {/* Dashboard */}
+      {loaded && (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+          {/* Filters */}
           <div className="bg-[#0d1220] border border-slate-800 rounded-xl p-5 space-y-5">
-            <h2 className="text-xs uppercase tracking-widest text-slate-500 font-semibold">Filtros</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xs uppercase tracking-widest text-slate-500 font-semibold">Filtros</h2>
+              <label className="cursor-pointer text-xs text-cyan-400 hover:text-cyan-300 transition-colors underline">
+                Cargar otro archivo
+                <input type="file" accept=".csv" onChange={handleFile} className="hidden" />
+              </label>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
                 <label className="text-xs text-slate-500">Fecha inicio</label>
@@ -191,6 +235,7 @@ export default function Home() {
             </button>
           </div>
 
+          {/* Stats */}
           {stats && (
             <div className="grid grid-cols-4 gap-4">
               {[
@@ -207,6 +252,7 @@ export default function Home() {
             </div>
           )}
 
+          {/* Table */}
           <div className="bg-[#0d1220] border border-slate-800 rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
               <span className="text-xs text-slate-500">

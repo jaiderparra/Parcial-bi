@@ -54,14 +54,25 @@ export default function Home() {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetch("/sensor_data.csv")
-      .then((r) => r.text())
-      .then((text) => {
-        const result = Papa.parse<SensorRecord>(text, { header: true, skipEmptyLines: true });
-        setAllData(result.data);
+    setLoading(true);
+    const buffer: SensorRecord[] = [];
+
+    Papa.parse<SensorRecord>("/sensor_data.csv", {
+      download: true,
+      header: true,
+      skipEmptyLines: true,
+      chunkSize: 1024 * 64,
+      chunk: (results: Papa.ParseResult<SensorRecord>) => {
+        for (const row of results.data) {
+          buffer.push(row);
+        }
+      },
+      complete: () => {
+        setAllData(buffer);
         setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      },
+      error: () => setLoading(false),
+    });
   }, []);
 
   const filteredData = useMemo(() => {
@@ -128,7 +139,6 @@ export default function Home() {
         </div>
       ) : (
         <div className="max-w-7xl mx-auto px-6 py-6 space-y-6">
-          {/* Filters */}
           <div className="bg-[#0d1220] border border-slate-800 rounded-xl p-5 space-y-5">
             <h2 className="text-xs uppercase tracking-widest text-slate-500 font-semibold">Filtros</h2>
             <div className="grid grid-cols-2 gap-4">
@@ -181,7 +191,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Stats */}
           {stats && (
             <div className="grid grid-cols-4 gap-4">
               {[
@@ -198,7 +207,6 @@ export default function Home() {
             </div>
           )}
 
-          {/* Table */}
           <div className="bg-[#0d1220] border border-slate-800 rounded-xl overflow-hidden">
             <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
               <span className="text-xs text-slate-500">
